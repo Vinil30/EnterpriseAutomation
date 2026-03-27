@@ -1,0 +1,7 @@
+groq
+langgraph
+langchain_groq
+langchain
+pymongo
+python-dotenv
+pandas

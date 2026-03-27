@@ -69,16 +69,24 @@ def should_continue(state: AgentState) -> str:
 def data_transformer(state: AgentState) -> AgentState:
     return state
 
-
 @traceable(name="DataAnalysisAgent")
 def data_analysis(state: AgentState) -> AgentState:
-    return state
+    from utils.DatasetAnalyser import BusinessAnalystAgent
+    agent = BusinessAnalystAgent(
+        api_key=state["api_key"],
+        unified_dataset_path=state.get("unified_dataset_path", "unified_dataset.csv"),
+    )
+    return {**state, "ba_output": agent.analyze()}
 
 
 @traceable(name="AnomalyDetectionAgent")
 def anomaly_detection(state: AgentState) -> AgentState:
-    return state
-
+    from utils.AnamolyDetection import AnomalyDetectionAgent
+    agent = AnomalyDetectionAgent(
+        api_key=state["api_key"],
+        enriched_dataset_path="enriched_dataset.csv",
+    )
+    return {**state, "anomaly_output": agent.analyze()}
 
 @traceable(name="ManagerAgent")
 def manager_agent_node(state: AgentState) -> dict:
