@@ -33,7 +33,7 @@ class AgentState(TypedDict):
 @tool
 def action_agent_tool(ba_output: Dict, anomaly_output: Dict, api_key: str) -> Dict:
     """Suggest an action based on business analysis and detected anomalies."""
-    agent = ActionAgent(api_key=api_key)
+    agent = ActionAgent()
     result = agent.suggest_action(ba_output, anomaly_output)
     
     # Return structured result with action taken flag
@@ -54,7 +54,7 @@ def validation_agent_tool(
     api_key: str,
 ) -> Dict:
     """Validate whether a previous action improved business metrics."""
-    agent = ValidationAgent(api_key=api_key)
+    agent = ValidationAgent()
     result = agent.validate(
         previous_action,
         previous_ba,
@@ -174,9 +174,18 @@ def anomaly_detection(state: AgentState) -> AgentState:
 
 @traceable(name="ManagerAgent")
 def manager_agent_node(state: AgentState) -> dict:
+    # Hard stop — return empty AIMessage with no tool calls
+    if state.get("loop_counter", 0) >= 3:
+        print(f"🛑 Hard stop: loop_counter={state.get('loop_counter')}. Ending.")
+        return {"messages": [AIMessage(content="Analysis complete. Max iterations reached.")]}
+
+    # Also stop if both action and validation are done
+    if state.get("action_taken") and state.get("validation_done"):
+        print("✅ Action + Validation complete. Ending.")
+        return {"messages": [AIMessage(content="Action taken and validated. Pipeline complete.")]}
+
     manager = ManagerAgent(api_key=state["api_key"], tools=TOOLS)
     
-    # Prepare state for manager with clear status flags
     serializable_state = {
         "api_key": state["api_key"],
         "ba_output": state.get("ba_output", {}),
@@ -192,53 +201,54 @@ def manager_agent_node(state: AgentState) -> dict:
     
     response = manager.run(serializable_state)
     
-    # AFTER getting response, INJECT the actual API key into any tool calls
     if hasattr(response, 'tool_calls') and response.tool_calls:
         for tool_call in response.tool_calls:
-            if 'api_key' in tool_call.get('args', {}):
-                # Replace placeholder with actual key
-                tool_call['args']['api_key'] = state["api_key"]
-                print(f"✅ Injected actual API key into {tool_call['name']}")
+            tool_call['args']['api_key'] = state["api_key"]
+            if tool_call['name'] == 'action_agent_tool':
+                tool_call['args']['ba_output'] = state.get("ba_output", {})
+                tool_call['args']['anomaly_output'] = state.get("anomaly_output", {})
+            elif tool_call['name'] == 'validation_agent_tool':
+                tool_call['args']['previous_ba'] = state.get("previous_ba", {})
+                tool_call['args']['previous_anomaly'] = state.get("previous_anomaly", {})
+                tool_call['args']['current_ba'] = state.get("ba_output", {})
+                tool_call['args']['current_anomaly'] = state.get("anomaly_output", {})
+                tool_call['args']['previous_action'] = state.get("previous_action", {})
+                tool_call['args']['action_taken'] = state.get("action_taken", False)
+        print(f"✅ Injected full state into {[tc['name'] for tc in response.tool_calls]}")
     
     return {"messages": [response]}
 
 @traceable(name="ProcessToolResults")
 def process_tool_results(state: AgentState) -> AgentState:
-    """
-    Process tool results and update state to prevent infinite loops.
-    """
     new_state = {**state}
-    last_message = state["messages"][-1]
     
-    # Increment loop counter
+    # Always increment when we enter this node
     new_state["loop_counter"] = state.get("loop_counter", 0) + 1
-    
-    # Check if there are tool calls
-    if hasattr(last_message, 'tool_calls') and last_message.tool_calls:
-        for tool_call in last_message.tool_calls:
+
+    # Find the AIMessage with tool_calls (not the last ToolMessage)
+    messages = state["messages"]
+    ai_message = next(
+        (m for m in reversed(messages) if isinstance(m, AIMessage) and getattr(m, "tool_calls", None)),
+        None
+    )
+
+    if ai_message:
+        for tool_call in ai_message.tool_calls:
             tool_name = tool_call.get('name')
-            
             if tool_name == 'action_agent_tool':
-                # Action was taken
                 new_state["action_taken"] = True
                 new_state["previous_action"] = tool_call.get('args', {})
-                new_state["validation_done"] = False  # Reset validation flag
+                new_state["validation_done"] = False
                 new_state["is_first_run"] = False
-                
                 print(f"✅ Action recorded: {tool_name}")
-                
             elif tool_name == 'validation_agent_tool':
-                # Validation completed
                 new_state["validation_done"] = True
-                new_state["action_taken"] = False  # Reset action flag after validation
+                new_state["action_taken"] = False
                 new_state["is_first_run"] = False
-                
                 print(f"✅ Validation recorded: {tool_name}")
-    
-    # Store previous outputs for next validation cycle
+
     new_state["previous_ba"] = state.get("ba_output")
     new_state["previous_anomaly"] = state.get("anomaly_output")
-    
     return new_state
 
 # -------- GRAPH --------

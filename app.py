@@ -158,11 +158,26 @@ def index():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        # ── Step 1: Account fields ──
         name     = request.form.get("name", "").strip()
         email    = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        GROQ_API_KEY  = os.environ.get("GROQ_API_KEY")
 
+        # ── Step 2: Business fields ──
+        business_name         = request.form.get("business_name", "").strip()
+        industry              = request.form.get("industry", "").strip()
+        sales_channel         = request.form.get("sales_channel", "").strip()
+        order_volume          = request.form.get("order_volume", "").strip()
+        monthly_revenue_label = request.form.get("monthly_revenue_label", "").strip()
+
+        # ── Step 3: Context fields ──
+        challenges     = request.form.getlist("challenges")   # list of checked values
+        current_method = request.form.get("current_method", "").strip()
+        focus_notes    = request.form.get("focus_notes", "").strip()
+
+        GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
+        # ── Validation ──
         if len(password) < 8:
             flash("Password must be at least 8 characters.", "danger")
             return render_template("signup.html")
@@ -171,14 +186,64 @@ def signup():
             flash("An account with that email already exists.", "danger")
             return render_template("signup.html")
 
+        # ── Build business context string for the BA agent ──
+        # This is injected as context into every analysis run for this user
+        business_context_parts = []
+
+        if business_name:
+            business_context_parts.append(f"Business: {business_name}")
+        if industry:
+            business_context_parts.append(f"Industry: {industry}")
+        if sales_channel:
+            business_context_parts.append(f"Sales Channel: {sales_channel}")
+        if order_volume:
+            business_context_parts.append(f"Monthly Order Volume: {order_volume}")
+        if monthly_revenue_label:
+            business_context_parts.append(f"Monthly Revenue: {monthly_revenue_label}")
+        if challenges:
+            challenge_labels = {
+                "high_returns":   "High Return Rates",
+                "freight_costs":  "Freight / Shipping Costs",
+                "dead_inventory": "Dead / Slow Inventory",
+                "ad_spend":       "Inefficient Ad Spend",
+                "seller_quality": "Seller / Supplier Quality",
+                "margin_erosion": "Margin Erosion",
+                "pricing":        "Pricing Issues",
+                "refunds":        "Refund / Chargeback Volume",
+            }
+            selected = [challenge_labels.get(c, c) for c in challenges]
+            business_context_parts.append(f"Known Cost Challenges: {', '.join(selected)}")
+        if current_method:
+            business_context_parts.append(f"Current Analysis Method: {current_method}")
+        if focus_notes:
+            business_context_parts.append(f"Owner Notes: {focus_notes}")
+
+        business_context = "\n".join(business_context_parts)
+
+        # ── Insert user document ──
         user_doc = {
             "name":            name,
             "email":           email,
             "password_hash":   generate_password_hash(password),
-            "api_key":         GROQ_API_KEY,          
             "created_at":      datetime.utcnow(),
             "total_runs":      0,
+
+            # Business profile — used to personalise every BA agent prompt
+            "business_profile": {
+                "business_name":         business_name,
+                "industry":              industry,
+                "sales_channel":         sales_channel,
+                "order_volume":          order_volume,
+                "monthly_revenue":       monthly_revenue_label,
+                "cost_challenges":       challenges,
+                "current_method":        current_method,
+                "focus_notes":           focus_notes,
+            },
+
+            # Pre-built context string injected into analysis prompts
+            "business_context": business_context,
         }
+
         result = users_col.insert_one(user_doc)
         session.permanent = True
         session["user_id"]   = str(result.inserted_id)
