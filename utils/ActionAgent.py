@@ -11,7 +11,7 @@ class ActionAgent:
     Suggests actionable fixes based on anomalies and business metrics.
     """
     
-    def __init__(self, api_key: str, model: str = "mixtral-8x7b-32768"):
+    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile"):
         self.llm = ChatGroq(api_key=api_key, model=model, temperature=0)
     
     def suggest_action(self, ba_output: Dict, anomaly_output: Dict) -> Dict[str, Any]:

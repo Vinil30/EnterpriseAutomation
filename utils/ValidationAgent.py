@@ -12,7 +12,7 @@ class ValidationAgent:
     LLM handles all analysis directly.
     """
     
-    def __init__(self, api_key: str, model: str = "mixtral-8x7b-32768"):
+    def __init__(self, api_key: str, model: str = "llama-3.3-70b-versatile"):
         self.llm = ChatGroq(api_key=api_key, model=model, temperature=0)
     
     def validate(

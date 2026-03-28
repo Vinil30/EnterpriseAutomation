@@ -5,3 +5,5 @@ langchain
 pymongo
 python-dotenv
 pandas
+flask
+werkzeug

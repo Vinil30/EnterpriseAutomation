@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | CostIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #F7F5F0;
+      --bg2:        #FFFFFF;
+      --surface:    #F0EDE8;
+      --border:     #E2DDD6;
+      --border-dark:#C8C2B8;
+      --accent:     #1A472A;
+      --accent2:    #2D6A4F;
+      --pop:        #E8FF3A;
+      --pop2:       #FF6B35;
+      --text:       #1A1814;
+      --muted:      #7A7268;
+      --muted2:     #A09890;
+      --card:       #FFFFFF;
+      --danger:     #C0392B;
+      --warn:       #D97706;
+      --success:    #2D6A4F;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Geist', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,245,240,0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px;
+    }
+
+    .nav-inner {
+      max-width: 1400px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-weight: 900; font-size: 20px;
+      text-decoration: none; color: var(--text);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-mark {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--pop);
+      font-family: 'Geist Mono', monospace;
+      font-size: 10px; font-weight: 500;
+    }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 6px; list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 13px; font-weight: 500;
+      color: var(--muted); text-decoration: none;
+      padding: 6px 14px; border-radius: 8px;
+      transition: all .18s;
+    }
+
+    .nav-links a:hover { color: var(--text); background: var(--surface); }
+
+    .nav-links a.active {
+      color: var(--accent);
+      background: rgba(26,71,42,0.07);
+      font-weight: 600;
+    }
+
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 13px; color: var(--text); font-weight: 500;
+    }
+
+    .user-avatar {
+      width: 24px; height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--pop); font-weight: 600;
+      font-family: 'Geist Mono', monospace;
+    }
+
+    .btn-signout {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 16px;
+      background: transparent;
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      font-family: 'Geist', sans-serif;
+      font-size: 13px; font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      transition: all .18s;
+    }
+
+    .btn-signout:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(192,57,43,.05);
+    }
+
+    /* ── MAIN ── */
+    .main {
+      max-width: 1400px; margin: 0 auto;
+      padding: 40px 48px 80px;
+    }
+
+    /* flash */
+    .flash-container { margin-bottom: 24px; }
+
+    .flash {
+      padding: 12px 18px; border-radius: 10px;
+      font-size: 13px; border-left: 3px solid;
+      margin-bottom: 8px; background: var(--card);
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+
+    .flash-success { border-color: var(--success); color: var(--success); }
+    .flash-danger  { border-color: var(--danger);  color: var(--danger); }
+    .flash-warning { border-color: var(--warn);    color: var(--warn); }
+
+    /* ── WELCOME ── */
+    .welcome {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px;
+      margin-bottom: 36px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .welcome-text .eyebrow {
+      font-family: 'Geist Mono', monospace;
+      font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted2); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .eyebrow-line {
+      width: 20px; height: 2px;
+      background: var(--accent); border-radius: 2px;
+    }
+
+    .welcome-text h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 900; letter-spacing: -1.5px; line-height: 1.05;
+    }
+
+    .welcome-text h1 em {
+      font-style: italic; color: var(--accent);
+    }
+
+    .welcome-text p {
+      color: var(--muted); font-size: 14px; margin-top: 12px;
+      max-width: 500px; line-height: 1.75; font-weight: 400;
+    }
+
+    .memory-chip {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      max-width: 300px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    }
+
+    .memory-chip-icon {
+      font-size: 24px; flex-shrink: 0; margin-top: 2px;
+    }
+
+    .memory-chip-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text); margin-bottom: 4px;
+    }
+
+    .memory-chip-sub {
+      font-size: 12px; color: var(--muted); line-height: 1.6;
+    }
+
+    .memory-chip-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px;
+      background: #E8F5E9;
+      border-radius: 100px;
+      font-size: 10px; font-weight: 600;
+      color: var(--accent2);
+      margin-top: 6px;
+    }
+
+    .badge-pulse {
+      width: 5px; height: 5px;
+      background: var(--accent2); border-radius: 50%;
+      animation: blink 1.4s ease infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 24px;
+      position: relative; overflow: hidden;
+      transition: all .2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(26,24,20,.07);
+    }
+
+    .stat-card-accent {
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0; transition: opacity .2s;
+    }
+
+    .stat-card:hover .stat-card-accent { opacity: 1; }
+
+    .stat-label {
+      font-size: 11px; font-weight: 500;
+      color: var(--muted); margin-bottom: 12px;
+      display: flex; align-items: center; gap: 7px;
+      letter-spacing: 0.02em;
+    }
+
+    .stat-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+
+    .stat-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 40px; font-weight: 900;
+      color: var(--text); line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .stat-val.accent { color: var(--accent); }
+    .stat-val.danger { color: var(--danger); }
+
+    .stat-sub {
+      font-size: 12px; color: var(--muted2); margin-top: 8px; font-weight: 400;
+    }
+
+    /* ── TWO-COL LAYOUT ── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header-icon {
+      width: 36px; height: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .card-title {
+      font-size: 15px; font-weight: 600;
+      color: var(--text); letter-spacing: -0.1px;
+    }
+
+    .card-body { padding: 24px; }
+
+    /* ── DROP ZONE ── */
+    .dropzone {
+      border: 1.5px dashed var(--border-dark);
+      border-radius: 12px;
+      padding: 40px 24px;
+      text-align: center;
+      background: var(--surface);
+      transition: all .2s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .dropzone:hover, .dropzone.drag-over {
+      border-color: var(--accent);
+      background: rgba(26,71,42,.04);
+    }
+
+    .dropzone input {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+
+    .dz-icon { font-size: 36px; margin-bottom: 14px; }
+
+    .dz-title {
+      font-size: 14px; font-weight: 600;
+      color: var(--text); margin-bottom: 6px;
+    }
+
+    .dz-text {
+      font-size: 12px; color: var(--muted); line-height: 1.8;
+      margin-bottom: 20px;
+    }
+
+    .dz-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 20px;
+      background: var(--card);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      color: var(--accent);
+      pointer-events: none;
+    }
+
+    .file-list {
+      margin-top: 12px; display: none;
+      flex-direction: column; gap: 6px;
+    }
+
+    .file-pill {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px; color: var(--text); font-weight: 500;
+    }
+
+    .file-pill-icon { color: var(--accent); font-size: 14px; }
+
+    /* context section */
+    .ctx-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0 0;
+      margin-top: 16px;
+      cursor: pointer;
+      border-top: 1px solid var(--border);
+      user-select: none;
+    }
+
+    .ctx-toggle-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500;
+      color: var(--muted);
+    }
+
+    .ctx-toggle-arrow {
+      font-size: 11px; color: var(--muted2);
+      transition: transform .25s;
+    }
+
+    .ctx-toggle-arrow.open { transform: rotate(180deg); }
+
+    .ctx-body { display: none; padding-top: 16px; }
+    .ctx-body.open { display: block; }
+
+    .ctx-label {
+      font-size: 11px; font-weight: 500;
+      color: var(--muted); margin-bottom: 8px; letter-spacing: .02em;
+    }
+
+    .ctx-textarea {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-family: 'Geist Mono', monospace;
+      font-size: 12px; color: var(--text);
+      resize: vertical; min-height: 90px;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+
+    .ctx-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(26,71,42,.07);
+    }
+
+    .ctx-textarea::placeholder { color: var(--muted2); }
+
+    .ctx-check {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 12px;
+      font-size: 13px; color: var(--muted);
+      cursor: pointer;
+    }
+
+    .ctx-check input[type="checkbox"] {
+      appearance: none;
+      width: 16px; height: 16px;
+      border: 1.5px solid var(--border-dark);
+      border-radius: 4px;
+      background: var(--surface);
+      cursor: pointer; position: relative;
+      transition: all .15s;
+    }
+
+    .ctx-check input[type="checkbox"]:checked {
+      background: var(--accent); border-color: var(--accent);
+    }
+
+    .ctx-check input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute; top: -1px; left: 2px;
+      font-size: 11px; color: #fff; font-weight: 600;
+    }
+
+    /* run button */
+    .btn-run {
+      width: 100%; margin-top: 20px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 10px;
+      padding: 15px 24px;
+      font-family: 'Geist', sans-serif;
+      font-size: 14px; font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all .2s;
+    }
+
+    .btn-run:hover {
+      background: var(--accent2);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 28px rgba(26,71,42,.2);
+    }
+
+    .btn-run:active { transform: translateY(0); }
+    .btn-run .arrow { transition: transform .2s; }
+    .btn-run:hover .arrow { transform: translateX(4px); }
+    .btn-run.loading { opacity: .65; pointer-events: none; }
+
+    /* ── RESULT CARD ── */
+    .result-card { margin-top: 20px; }
+
+    .result-section {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-section:last-child { border-bottom: none; }
+
+    .result-section-title {
+      font-size: 11px; font-weight: 600;
+      color: var(--muted); margin-bottom: 14px;
+      letter-spacing: .04em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .result-kpi-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+
+    .kpi-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      transition: border-color .15s;
+    }
+
+    .kpi-box:hover { border-color: var(--border-dark); }
+
+    .kpi-box-label {
+      font-size: 11px; color: var(--muted2); margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .kpi-box-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 900;
+      color: var(--accent); letter-spacing: -0.5px;
+    }
+
+    .anomaly-row {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .anomaly-row:last-child { border-bottom: none; }
+
+    .anomaly-desc { color: var(--text); font-weight: 500; margin-bottom: 5px; }
+
+    .anomaly-meta {
+      font-size: 12px; color: var(--muted);
+      display: flex; gap: 14px;
+    }
+
+    .anomaly-impact { color: var(--danger); font-weight: 600; }
+    .anomaly-sev    { color: var(--warn); }
+
+    /* ── HISTORY PANEL ── */
+    .history-list { display: flex; flex-direction: column; }
+
+    .history-item {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: var(--surface); }
+
+    .history-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .history-date {
+      font-size: 12px; color: var(--muted); font-weight: 500;
+      font-family: 'Geist Mono', monospace;
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 100px;
+      font-size: 11px; font-weight: 600;
+    }
+
+    .badge-success {
+      background: #E8F5E9; color: var(--success);
+    }
+
+    .badge-fail {
+      background: #FEF2F2; color: var(--danger);
+    }
+
+    .history-files {
+      font-size: 12px; color: var(--muted); margin-bottom: 8px;
+    }
+
+    .history-metrics {
+      display: flex; gap: 14px; flex-wrap: wrap;
+    }
+
+    .h-metric {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--muted2);
+    }
+
+    .h-metric span { color: var(--text); font-weight: 600; }
+    .h-metric .danger { color: var(--danger); }
+
+    .history-empty {
+      padding: 52px 24px; text-align: center;
+      color: var(--muted); font-size: 13px; line-height: 1.8;
+    }
+
+    .history-empty-icon { font-size: 32px; margin-bottom: 14px; opacity: .35; }
+
+    .view-all {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 14px;
+      font-size: 13px; font-weight: 500;
+      color: var(--muted);
+      text-decoration: none;
+      border-top: 1px solid var(--border);
+      transition: all .18s;
+    }
+
+    .view-all:hover { color: var(--accent); background: var(--surface); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1100px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 700px) {
+      nav { padding: 0 20px; }
+      .main { padding: 24px 20px 60px; }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in { animation: fadeUp .45s ease both; }
+    .fade-in-2 { animation: fadeUp .45s .08s ease both; }
+    .fade-in-3 { animation: fadeUp .45s .16s ease both; }
+    .fade-in-4 { animation: fadeUp .45s .24s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-inner">
+    <a href="{{ url_for('index') }}" class="logo">
+      <span class="logo-mark">CQ</span>
+      CostIQ
+    </a>
+    <ul class="nav-links">
+      <li><a href="{{ url_for('dashboard') }}" class="active">Dashboard</a></li>
+      <li><a href="{{ url_for('history') }}">History</a></li>
+    </ul>
+    <div class="nav-right">
+      <div class="user-chip">
+        <div class="user-avatar">{{ (user.name[0] if user and user.name else 'U') | upper }}</div>
+        {{ user.name if user else 'Analyst' }}
+      </div>
+      <a href="{{ url_for('signout') }}" class="btn-signout">↩ Sign Out</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- Flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Welcome -->
+  <div class="welcome fade-in">
+    <div class="welcome-text">
+      <div class="eyebrow">
+        <span class="eyebrow-line"></span>
+        Operator Console
+      </div>
+      <h1>Hello, <em>{{ user.name.split()[0] if user and user.name else 'Analyst' }}.</em></h1>
+      <p>Upload your ecommerce datasets and let six autonomous agents detect cost leakages, root-cause them, generate actions, and validate impact — hands-free.</p>
+    </div>
+    <div class="memory-chip">
+      <span class="memory-chip-icon">🧠</span>
+      <div>
+        <div class="memory-chip-title">Agent Memory Active</div>
+        <div class="memory-chip-sub">Manager stores all past decisions & outcomes. Every run learns from the last.</div>
+        <div class="memory-chip-badge">
+          <span class="badge-pulse"></span> Live
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid fade-in-2">
+    <div class="stat-card">
+      <div class="stat-card-accent"></div>
+      <div class="stat-label">
+        <span class="stat-dot" style="background:var(--accent2);"></span>
+        Total Runs
+      </div>
+      <div class="stat-val accent">{{ user.total_runs if user else 0 }}</div>
+      <div class="stat-sub">pipeline executions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-accent"></div>
+      <div class="stat-label">
+        <span class="stat-dot" style="background:var(--accent);"></span>
+        Last Analysis
+      </div>
+      <div class="stat-val" style="font-size:22px; padding-top: 6px; font-family: 'Geist Mono', monospace; font-weight:500; letter-spacing:-0.5px;">
+        {{ latest.created_at[:10] if latest and latest.created_at else '—' }}
+      </div>
+      <div class="stat-sub">most recent run</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-accent"></div>
+      <div class="stat-label">
+        <span class="stat-dot" style="background:var(--danger);"></span>
+        Anomalies (Latest)
+      </div>
+      <div class="stat-val danger">
+        {{ latest.anomaly_output.total_anomalies if latest and latest.anomaly_output and latest.anomaly_output.total_anomalies else '—' }}
+      </div>
+      <div class="stat-sub">detected this cycle</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-accent"></div>
+      <div class="stat-label">
+        <span class="stat-dot" style="background:var(--accent2);"></span>
+        Profit Margin (Latest)
+      </div>
+      <div class="stat-val accent">
+        {% if latest and latest.ba_output and latest.ba_output.profit_margin %}
+          {{ "%.1f"|format(latest.ba_output.profit_margin) }}%
+        {% else %}—{% endif %}
+      </div>
+      <div class="stat-sub">current cycle</div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+
+    <!-- ── UPLOAD CARD ── -->
+    <div>
+      <div class="card fade-in-3">
+        <div class="card-header">
+          <div class="card-header-icon">⚡</div>
+          <div>
+            <div class="card-title">Run New Analysis</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('run_analysis') }}"
+                enctype="multipart/form-data" id="run-form">
+
+            <div class="dropzone" id="dropzone">
+              <input type="file" name="csv_files" id="csv_files"
+                     multiple accept=".csv" required
+                     onchange="handleFiles(this.files)"/>
+              <div class="dz-icon">📂</div>
+              <div class="dz-title">Drop your CSV files here</div>
+              <div class="dz-text">
+                Orders · Returns · Inventory · Ad Spend<br/>
+                Any ecommerce dataset — schema detected automatically
+              </div>
+              <div class="dz-btn">↑ Browse Files</div>
+            </div>
+
+            <div class="file-list" id="file-list"></div>
+
+            <div class="ctx-toggle" onclick="toggleCtx()">
+              <div class="ctx-toggle-label">
+                🕑 &nbsp; Previous Run Context
+                <span style="font-size:11px;color:var(--muted2);font-weight:400;">(optional)</span>
+              </div>
+              <span class="ctx-toggle-arrow" id="ctx-arrow">▾</span>
+            </div>
+
+            <div class="ctx-body" id="ctx-body">
+              <div class="ctx-label" style="margin-top:16px;">Previous Action JSON (from last run)</div>
+              <textarea class="ctx-textarea" name="prev_action" rows="4"
+                        placeholder='{"action": "pause_seller", "seller_id": "123", "expected_impact": 5000}'>{{ prev_action_json }}</textarea>
+
+              <label class="ctx-check">
+                <input type="checkbox" name="action_taken" value="true"/>
+                Mark previous action as already executed
+              </label>
+            </div>
+
+            <button type="submit" class="btn-run" id="run-btn" onclick="setLoading()">
+              Run Agentic Pipeline <span class="arrow">→</span>
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- Latest result snapshot -->
+      {% if latest and latest.ba_output %}
+      <div class="card result-card fade-in-4">
+        <div class="card-header">
+          <div class="card-header-icon">📊</div>
+          <div class="card-title">Latest Result Snapshot</div>
+        </div>
+
+        {% if latest.ba_output %}
+        <div class="result-section">
+          <div class="result-section-title">📈 Business Metrics</div>
+          <div class="result-kpi-grid">
+            <div class="kpi-box">
+              <div class="kpi-box-label">Revenue</div>
+              <div class="kpi-box-val">
+                ${{ "{:,.0f}".format(latest.ba_output.total_revenue) if latest.ba_output.total_revenue else '—' }}
+              </div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-box-label">Profit</div>
+              <div class="kpi-box-val">
+                ${{ "{:,.0f}".format(latest.ba_output.total_profit) if latest.ba_output.total_profit else '—' }}
+              </div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-box-label">Return Rate</div>
+              <div class="kpi-box-val">
+                {{ "%.1f"|format(latest.ba_output.return_rate) if latest.ba_output.return_rate else '—' }}%
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if latest.anomaly_output and latest.anomaly_output.anomalies %}
+        <div class="result-section">
+          <div class="result-section-title">🚨 Top Anomalies</div>
+          {% for a in latest.anomaly_output.anomalies[:3] %}
+          <div class="anomaly-row">
+            <div class="anomaly-desc">{{ a.description if a.description else a.type if a.type else 'Anomaly detected' }}</div>
+            <div class="anomaly-meta">
+              <span>Impact: <span class="anomaly-impact">${{ "{:,.0f}".format(a.estimated_impact) if a.estimated_impact else '?' }}</span></span>
+              <span>Severity: <span class="anomaly-sev">{{ a.severity if a.severity else '—' }}</span></span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if latest.action_output %}
+        <div class="result-section">
+          <div class="result-section-title">⚡ Recommended Action</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.75;font-weight:400;">
+            {{ latest.action_output.description if latest.action_output.description else latest.action_output | tojson }}
+          </div>
+          {% if latest.action_output.estimated_impact %}
+          <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:600;">
+            Est. Impact: ${{ "{:,.0f}".format(latest.action_output.estimated_impact) }}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ── HISTORY PANEL ── -->
+    <div>
+      <div class="card fade-in-3">
+        <div class="card-header">
+          <div class="card-header-icon">🕑</div>
+          <div class="card-title">Recent Runs</div>
+        </div>
+
+        <div class="history-list">
+          {% if last_5_analyses %}
+            {% for a in last_5_analyses %}
+            <div class="history-item">
+              <div class="history-top">
+                <span class="history-date">
+                  {{ a.created_at[:19].replace('T',' ') if a.created_at else '—' }}
+                </span>
+                {% if a.success %}
+                <span class="badge badge-success">✓ Done</span>
+                {% else %}
+                <span class="badge badge-fail">✕ Failed</span>
+                {% endif %}
+              </div>
+              <div class="history-files">
+                📄 {{ a.file_names | join(', ') if a.file_names else '—' }}
+              </div>
+              <div class="history-metrics">
+                {% if a.ba_output and a.ba_output.profit_margin %}
+                <div class="h-metric">Margin <span>{{ "%.1f"|format(a.ba_output.profit_margin) }}%</span></div>
+                {% endif %}
+                {% if a.ba_output and a.ba_output.return_rate %}
+                <div class="h-metric">Returns <span>{{ "%.1f"|format(a.ba_output.return_rate) }}%</span></div>
+                {% endif %}
+                {% if a.anomaly_output and a.anomaly_output.total_anomalies %}
+                <div class="h-metric">Anomalies <span class="danger">{{ a.anomaly_output.total_anomalies }}</span></div>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div class="history-empty">
+            <div class="history-empty-icon">📭</div>
+            No analyses yet.<br/>Upload CSVs above to get started.
+          </div>
+          {% endif %}
+        </div>
+
+        <a href="{{ url_for('history') }}" class="view-all">View Full History →</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function handleFiles(files) {
+    const list = document.getElementById('file-list');
+    list.innerHTML = '';
+    if (files.length === 0) { list.style.display = 'none'; return; }
+    list.style.display = 'flex';
+    Array.from(files).forEach(f => {
+      const pill = document.createElement('div');
+      pill.className = 'file-pill';
+      pill.innerHTML = `<span class="file-pill-icon">◉</span> ${f.name} <span style="color:var(--muted2);margin-left:auto;font-family:'Geist Mono',monospace;font-size:11px;">${(f.size/1024).toFixed(1)} KB</span>`;
+      list.appendChild(pill);
+    });
+  }
+
+  const dz = document.getElementById('dropzone');
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop',      e => { e.preventDefault(); dz.classList.remove('drag-over'); });
+
+  function toggleCtx() {
+    document.getElementById('ctx-body').classList.toggle('open');
+    document.getElementById('ctx-arrow').classList.toggle('open');
+  }
+
+  function setLoading() {
+    const btn = document.getElementById('run-btn');
+    btn.classList.add('loading');
+    btn.innerHTML = '⏳ Running pipeline…';
+  }
+
+  setTimeout(() => {
+    document.querySelectorAll('.flash').forEach(f => {
+      f.style.transition = 'opacity .5s';
+      f.style.opacity = '0';
+      setTimeout(() => f.remove(), 500);
+    });
+  }, 4500);
+</script>
+
+</body>
+</html>
