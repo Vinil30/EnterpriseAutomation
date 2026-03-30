@@ -1,6 +1,6 @@
 # 🤖 Agentic AI System for Enterprise Cost Optimization
 
-> An autonomous AI system that continuously monitors ecommerce operations, detects cost leakages, identifies root causes, takes corrective actions, validates outcomes, and improves itself over time. The system behaves like a **self-driving business analyst** that actively fixes problems and proves its impact.
+> An autonomous AI system that continuously monitors enterprise operations, detects cost leakages, identifies root causes, takes corrective actions, validates outcomes, and improves itself over time. The system behaves like a **self-driving business analyst** that actively fixes problems and proves its impact.
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-0.1.0+-green.svg)](https://langchain.com/)
